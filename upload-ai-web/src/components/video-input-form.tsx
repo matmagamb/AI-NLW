@@ -6,10 +6,8 @@ import { Textarea } from "./ui/textarea";
 import { ChangeEvent, FormEvent, useMemo, useRef, useState } from "react";
 import { getFFmpeg } from "@/lib/ffmpeg";
 import { fetchFile } from '@ffmpeg/util'
-import { log } from "console";
-import { blob } from "stream/consumers";
 import { api } from "@/lib/axios";
-import { type } from "os";
+
 
 type Status = 'waiting' | 'converting' | 'uploading' | 'generating' | 'success'
 
@@ -20,8 +18,12 @@ const statusMessages = {
   success: 'Sucesso',
 }
 
+interface VideoInputFormProps {
+  onVideoUploaded: (id: string) => void
+}
 
-export function VideoInputForm() {
+
+export function VideoInputForm(props: VideoInputFormProps) {
   const [videoFile, setVideoFile] = useState<File | null>(null)
   const [status, setStatus] = useState<Status>('waiting')
   const promptInputRef = useRef<HTMLTextAreaElement>(null)
@@ -106,6 +108,8 @@ export function VideoInputForm() {
     console.log('finalizou')
 
     setStatus('success')
+
+    props.onVideoUploaded(videoId)
   }
 
 

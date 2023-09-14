@@ -15,6 +15,7 @@ interface PromptSelectedProps {
 export function PromptSelect(props: PromptSelectedProps) {
   const [prompts, setprompts] = useState<Prompt[] | null>(null)
 
+
   useEffect(() => {
     api.get('/prompts').then(response => {
       setprompts(response.data)
