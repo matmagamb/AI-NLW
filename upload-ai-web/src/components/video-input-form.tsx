@@ -8,6 +8,7 @@ import { getFFmpeg } from "@/lib/ffmpeg";
 import { fetchFile } from '@ffmpeg/util'
 import { log } from "console";
 import { blob } from "stream/consumers";
+import { api } from "@/lib/axios";
 
 
 export function VideoInputForm() {
@@ -74,7 +75,21 @@ export function VideoInputForm() {
     const audioFile = await convertVideoTOAudio(videoFile)
     console.log(audioFile, prompt)
 
+    const data = new FormData()
+
+    data.append('file', audioFile)
+
+    const response = await api.post('/videos', data)
+
+    console.log(response.data)
+
+    const videoId = response.data.video.id
+
+    await api.post(`/videos/${videoId}/transcription`, { prompt })
+
+    console.log('finalizou')
   }
+
 
   const previwURL = useMemo(() => {
     if (!videoFile) {
