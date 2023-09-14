@@ -4,6 +4,10 @@ import { Separator } from "./ui/separator";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { ChangeEvent, FormEvent, useMemo, useRef, useState } from "react";
+import { getFFmpeg } from "@/lib/ffmpeg";
+import { fetchFile } from '@ffmpeg/util'
+import { log } from "console";
+import { blob } from "stream/consumers";
 
 
 export function VideoInputForm() {
@@ -22,7 +26,43 @@ export function VideoInputForm() {
 
   }
 
-  function handleUploadVideo(event: FormEvent<HTMLFormElement>) {
+  async function convertVideoTOAudio(video: File) {
+    console.log('convert started')
+
+    const ffmpeg = await getFFmpeg()
+
+    await ffmpeg.writeFile('input.mp4', await fetchFile(video))
+    //  ffmpeg.on('log', log => {
+    //  console.log(log)
+    // })
+
+    ffmpeg.on('progress', progress => {
+      console.log('convert progress' + Math.round(progress.progress * 100))
+    })
+    await ffmpeg.exec([
+      "-i",
+      "input.mp4",
+      '-map',
+      '0:a',
+      '-b:a',
+      '20k',
+      '-acodec',
+      'libmp3lame',
+      'output.mp3'
+    ])
+
+    const data = await ffmpeg.readFile('output.mp3')
+
+    const audioFileBlob = new Blob([data], { type: 'audio/mpeg' })
+    const audioFile = new File([audioFileBlob], 'audio.mp3', { type: 'audio/mpeg' })
+
+    console.log('convert finished')
+
+    return audioFile
+
+  }
+
+  async function handleUploadVideo(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
     const prompt = promptInputRef.current?.value
@@ -31,6 +71,8 @@ export function VideoInputForm() {
       return
     }
     //converter video em audio 
+    const audioFile = await convertVideoTOAudio(videoFile)
+    console.log(audioFile, prompt)
 
   }
 
